@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Quiz Application</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding-top: 20px; }
+        .container { max-width: 600px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <header class="text-center mb-4">
+            <h1>Quiz Master</h1>
+        </header>
+    </div>
+
+    <!-- Landing Page Template -->
+    <script id="landing-page-template" type="text/x-handlebars-template">
+        <form id="start-quiz-form">
+            <div class="form-group">
+                <input type="text" class="form-control" id="username" placeholder="Enter your name" required>
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary btn-block quiz-set-btn" data-set="questions_1">Quiz Set 1</button>
+                <button type="button" class="btn btn-primary btn-block quiz-set-btn" data-set="questions_2">Quiz Set 2</button>
+            </div>
+        </form>
+    </script>
+
+    <!-- Quiz Interface Template -->
+    <script id="quiz-interface-template" type="text/x-handlebars-template">
+        <div class="question-section mb-4">
+            <h2>{{question}}</h2>
+        </div>
+        <div class="answers-section">
+            {{#each answers}}
+                <button class="answer-btn btn btn-outline-primary btn-block" data-index="{{@index}}">
+                    {{this}}
+                </button>
+            {{/each}}
+        </div>
+        <button id="next-question" class="btn btn-info btn-block mt-4 hidden">Next Question</button>
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/handlebars/dist/handlebars.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderLandingPage();
+        });
+
+        const landingTemplate = Handlebars.compile(document.getElementById('landing-page-template').innerHTML);
+
+        function renderLandingPage() {
+            const html = landingTemplate();
+            document.getElementById('app').innerHTML = html;
+            
+            // Add event listeners to the new quiz set buttons
+            document.querySelectorAll('.quiz-set-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const quizSet = this.getAttribute('data-set');
+                    fetchQuizData(quizSet);
+                });
+            });
+        }
+
+        const quizInterfaceTemplate = Handlebars.compile(document.getElementById('quiz-interface-template').innerHTML);
+
+        async function fetchQuizData(quizSet) {
+            // Update the API URL to your actual JSON server location
+            const apiURL = `https://my-json-server.typicode.com/naaash03/Project-3/${quizSet}`;
+            try {
+                const response = await fetch(apiURL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayQuestion(data[0]); // Example function call
+            } catch (error) {
+                console.error('There was a problem fetching the quiz data:', error);
+            }
+        }
+
+        function displayQuestion(questionData) {
+            const html = quizInterfaceTemplate(questionData);
+            document.getElementById('app').innerHTML = html;
+
+            document.querySelectorAll('.answer-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    checkAnswer(parseInt(this.getAttribute('data-index')), questionData.correct);
+                    document.getElementById('next-question').classList.remove('hidden');
+                });
+            });
+
+            // Next question logic goes here
+        }
+
+        function checkAnswer(selected, correct) {
+            if (selected === correct) {
+                alert('Correct answer!');
+                // Show next question or complete the quiz
+            } else {
+                alert('Wrong answer. Try again.');
+            }
+        }
+    </script>
+</body>
+</html>
